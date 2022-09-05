@@ -69,7 +69,8 @@ tb_best_category as (
   qualify rankCategory = 1
 )
 
-select t1.*,
+select '{date}' as dtReferencia,
+       t1.*,
        t2.descCategoryName as descTopCategoria
 
 from tb_summary as t1
