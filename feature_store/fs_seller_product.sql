@@ -20,29 +20,29 @@ with tb_join_all as (
 tb_summary as (
 
   select idSeller,
-         avg(vlWeightGramas) as vlAvgWeight,
-         coalesce(avg(case when datediff('{date}', dtPurchase) < 30 then vlWeightGramas end),0) as vlAvgWeight1M,
-         coalesce(avg(case when datediff('{date}', dtPurchase) < 90 then vlWeightGramas end),0) as vlAvgWeight3M,
+         avg(vlWeightGramas) as vlMedioPeso,
+         coalesce(avg(case when datediff('{date}', dtPurchase) < 30 then vlWeightGramas end),0) as vlMedioPeso1M,
+         coalesce(avg(case when datediff('{date}', dtPurchase) < 90 then vlWeightGramas end),0) as vlMedioPeso3M,
 
-         avg(nrNameLength) as vlAvgNameLength,
-         coalesce(avg(case when datediff('{date}', dtPurchase) < 30 then nrNameLength end),0) as vlAvgNameLength1M,
-         coalesce(avg(case when datediff('{date}', dtPurchase) < 90 then nrNameLength end),0) as vlAvgNameLength3M,
+         avg(nrNameLength) as vlMedioTamanhoNome,
+         coalesce(avg(case when datediff('{date}', dtPurchase) < 30 then nrNameLength end),0) as vlMedioTamanhoNome1M,
+         coalesce(avg(case when datediff('{date}', dtPurchase) < 90 then nrNameLength end),0) as vlMedioTamanhoNome3M,
 
-         avg(nrPhotos) as vlAvgPhotos,
-         coalesce(avg(case when datediff('{date}', dtPurchase) < 30 then nrPhotos end),0) as vlAvgPhotos1M,
-         coalesce(avg(case when datediff('{date}', dtPurchase) < 90 then nrPhotos end),0) as vlAvgPhotos3M,
+         avg(nrPhotos) as qtMediaFotos,
+         coalesce(avg(case when datediff('{date}', dtPurchase) < 30 then nrPhotos end),0) as qtMediaFotos1M,
+         coalesce(avg(case when datediff('{date}', dtPurchase) < 90 then nrPhotos end),0) as qtMediaFotos3M,
 
-         avg(vlLengthCm * vlHeightCm * vlWidthCm) as vlAvgProductVolume,
-         avg(case when datediff('{date}', dtPurchase) < 30 then vlLengthCm * vlHeightCm * vlWidthCm else 0 end) as vlAvgProductVolume1M,
-         avg(case when datediff('{date}', dtPurchase) < 90 then vlLengthCm * vlHeightCm * vlWidthCm else 0 end) as vlAvgProductVolume3M,
+         avg(vlLengthCm * vlHeightCm * vlWidthCm) as vlMedioVolume,
+         avg(case when datediff('{date}', dtPurchase) < 30 then vlLengthCm * vlHeightCm * vlWidthCm else 0 end) as vlMedioVolume1M,
+         avg(case when datediff('{date}', dtPurchase) < 90 then vlLengthCm * vlHeightCm * vlWidthCm else 0 end) as vlMedioVolume3M,
 
-         count(distinct idProduct) as qtProducts,
-         count(distinct case when datediff('{date}', dtPurchase) < 30 then idProduct end) as qtProducts1M,
-         count(distinct case when datediff('{date}', dtPurchase) < 90 then idProduct end) as qtProducts3M,
+         count(distinct idProduct) as qtProductos,
+         count(distinct case when datediff('{date}', dtPurchase) < 30 then idProduct end) as qtProductos1M,
+         count(distinct case when datediff('{date}', dtPurchase) < 90 then idProduct end) as qtProductos3M,
 
-         count(distinct descCategoryName) as qtCategoryType,
-         count(distinct case when datediff('{date}', dtPurchase) < 30 then descCategoryName end) as qtCategoryType1M,
-         count(distinct case when datediff('{date}', dtPurchase) < 90 then descCategoryName end) as qtCategoryType3M
+         count(distinct descCategoryName) as qtTiposCategorias,
+         count(distinct case when datediff('{date}', dtPurchase) < 30 then descCategoryName end) as qtTiposCategorias1M,
+         count(distinct case when datediff('{date}', dtPurchase) < 90 then descCategoryName end) as qtTiposCategorias3M
 
   from tb_join_all
 
@@ -70,7 +70,7 @@ tb_best_category as (
 )
 
 select t1.*,
-       t2.descCategoryName
+       t2.descCategoryName as descTopCategoria
 
 from tb_summary as t1
 
