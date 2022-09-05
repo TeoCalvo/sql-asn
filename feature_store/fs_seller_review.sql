@@ -76,33 +76,34 @@ tb_summary (
 
 )
 
-select idSeller,
+select  '{date}' as dtReferencia,
+        idSeller,
         pctScoreNegativo,
         pctScoreNeutro,
         pctScorePositivo,
         pctResposta,
-        qtReviews,
+        qtReviews as qtAvaliacoes,
         qtMensagem,
         pctMensagem,
         avgTempoResposta,
-        avgTempoReview,
+        avgTempoReview as vlTempoMedioAvaliacao,
         pctScoreNegativo1M,
         pctScoreNeutro1M,
         pctScorePositivo1M,
         pctResposta1M,
-        qtReviews1M,
+        qtReviews1M as qtAvaliacoes1M,
         qtMensagem1M,
         qtMensagem1M / qtReviews1M as pctMensagem1M,
         avgTempoResposta1M,
-        avgTempoReview1M,
+        avgTempoReview1M as vlTempoMedioAvaliacao1M,
         pctScoreNegativo3M,
         pctScoreNeutro3M,
         pctScorePositivo3M,
         pctResposta3M,
-        qtReviews3M,
+        qtReviews3M qtAvaliacoes3M,
         qtMensagem3M,
         qtMensagem3M / qtReviews3M as pctMensagem3M,
         avgTempoResposta3M,
-        avgTempoReview3M
+        avgTempoReview3M as vlTempoMedioAvaliacao3M
 
 from tb_summary
