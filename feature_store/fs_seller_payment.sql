@@ -16,24 +16,24 @@ with tb_join_all as (
 
 )
 
-select '{date}' as dtReference,
+select '{date}' as dtReferencia,
        idSeller,
-       count(distinct descType) as qtPaymentType,
-       avg(nrInstallments) as qtAvgInstallments,
-       max(nrInstallments) as qtMaxInstallments,
-       min(nrInstallments) as qtMinInstallments,
+       count(distinct descType) as qtTipoPagamento,
+       avg(nrInstallments) as qtMediaParcelas,
+       max(nrInstallments) as qtMaxParcelas,
+       min(nrInstallments) as qtMinParcelas,
        
-       sum(case when descType = 'boleto' then 1 else 0 end) / count(distinct idOrder) as pctBoletoCount,
-       sum(case when descType = 'not_defined' then 1 else 0 end) / count(distinct idOrder) as pctNotDefinedCount,
-       sum(case when descType = 'credit_card' then 1 else 0 end) / count(distinct idOrder) as pctCreditCardCount,
-       sum(case when descType = 'voucher' then 1 else 0 end) / count(distinct idOrder) as pctVoucherCount,
-       sum(case when descType = 'debit_card' then 1 else 0 end) / count(distinct idOrder) as pctDebitCardCount,
+       sum(case when descType = 'boleto' then 1 else 0 end) / count(distinct idOrder) as pctBoleto,
+       sum(case when descType = 'not_defined' then 1 else 0 end) / count(distinct idOrder) as pctMeioPgmtNaoIdentificado,
+       sum(case when descType = 'credit_card' then 1 else 0 end) / count(distinct idOrder) as pctCartaoCredito,
+       sum(case when descType = 'voucher' then 1 else 0 end) / count(distinct idOrder) as pctVoucher,
+       sum(case when descType = 'debit_card' then 1 else 0 end) / count(distinct idOrder) as pctCartaoDebito,
        
-       sum(case when descType = 'boleto' then vlPayment  else 0 end) / sum(vlPayment) as pctBoletoRevenue,
-       sum(case when descType = 'not_defined' then vlPayment  else 0 end) / sum(vlPayment) as pctNotDefinedRevenue,
-       sum(case when descType = 'credit_card' then vlPayment  else 0 end) / sum(vlPayment) as pctCreditCardRevenue,
-       sum(case when descType = 'voucher' then vlPayment  else 0 end) / sum(vlPayment) as pctVoucherRevenue,
-       sum(case when descType = 'debit_card' then vlPayment  else 0 end) / sum(vlPayment) as pctDebitCardRevenue
+       sum(case when descType = 'boleto' then vlPayment  else 0 end) / sum(vlPayment) as pctReceitaBoleto,
+       sum(case when descType = 'not_defined' then vlPayment  else 0 end) / sum(vlPayment) as pctReceitaMeioPgmtNaoIdentificado,
+       sum(case when descType = 'credit_card' then vlPayment  else 0 end) / sum(vlPayment) as pctReceitaCartaoCredito,
+       sum(case when descType = 'voucher' then vlPayment  else 0 end) / sum(vlPayment) as pctReceitaVoucher,
+       sum(case when descType = 'debit_card' then vlPayment  else 0 end) / sum(vlPayment) as pctReceitaCartaoDebito
 
 from tb_join_all
 
