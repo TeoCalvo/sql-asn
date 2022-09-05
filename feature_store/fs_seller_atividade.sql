@@ -22,7 +22,7 @@ tb_summary as (
 
   from tb_join_all as t1
 
-  group by t1.idSeller
+  group by 1, t1.idSeller
 
 ),
 
@@ -35,15 +35,15 @@ tb_pos_top as (
 )
 
 select 
-       t1.dtReference,
+       t1.dtReference as dtReferencia,
        t1.idSeller,
-       t1.qtActiveDays,
-       t1.qtRecency,
+       t1.qtActiveDays as qtDiasAtivos,
+       t1.qtRecency as qtRecencia,
        t1.vlTop,
        case when t1.vlTop <= 10 then 1 else 0 end as flTop10,
        case when t1.vlTop <= 100 then 1 else 0 end as flTop100,
-       t2.descCity,
-       t2.descState
+       t2.descCity as descCidade,
+       t2.descState as descEstado
 
 from tb_pos_top as t1
 

@@ -33,11 +33,11 @@ tb_summary (
          count(distinct t1.idOrder) / count(distinct date_format(dtPurchase, 'y-M')) as qtPedidoMes,
          count(*) / 6 as qtItensMes6M,
          count(*) / count(distinct date_format(dtPurchase, 'y-M')) as qtItensMes,
-         sum(vlFreight) / sum(vlPrice + vlFreight) as propFreteTotal,
-         sum(vlFreight / (vlPrice + vlFreight)) / count(distinct idOrder) as avgFreteProp,
+         sum(vlFreight) / sum(vlPrice + vlFreight) as propFreteReceitaTotal,
+         sum(vlFreight / (vlPrice + vlFreight)) / count(distinct idOrder) as vlMediaFreteReceitaProp,
          count(distinct case when descStatus = 'canceled' then idOrder end) as qtPedidoCancelado,
          count(*) / count(distinct idOrder) as propItemPedido,
-         sum(vlFreight) / count(distinct idOrder) as vlFretePedido,
+         sum(vlFreight) / count(distinct idOrder) as vlMedioFretePedido,
          sum(vlPrice) as vlReceita,
          sum(vlPrice) / count(distinct idOrder) as vlTicketMedio,
          count(distinct case when dayofweek(dtPurchase) = 1 then idOrder end) / count(distinct idOrder) as pctPedidoDomingo,
@@ -49,15 +49,15 @@ tb_summary (
          count(distinct case when dayofweek(dtPurchase) = 7 then idOrder end) / count(distinct idOrder) as pctPedidoSabado,
          count(distinct case when date(dtDeliveredCustomer) < date(dtEstimatedDelivered) then idOrder end) as qtEntregaAntecipada,
          count(distinct case when date(dtDeliveredCustomer) > date(dtEstimatedDelivered) then idOrder end) as qtEntregaAtrasada,
-         avg( datediff(date(dtDeliveredCustomer), date(dtEstimatedDelivered)) ) as avgDiasEntregaPrevista,
-         avg( datediff(date(dtDeliveredCarrier), date(dtShippingLimit)) ) as avgDiasEntregaDespacho,
+         avg( datediff(date(dtDeliveredCustomer), date(dtEstimatedDelivered)) ) as qtDiasMediaEntregaPrevista,
+         avg( datediff(date(dtDeliveredCarrier), date(dtShippingLimit)) ) as qtMediaDiasEntregaDespacho,
          count(distinct descStateCustomer) as qtEstadosEntrega,
          
          count(distinct case when datediff('{date}',dtPurchase) < 30 then idOrder end) / (count(distinct t1.idOrder) / count(distinct date_format(dtPurchase, 'y-M')))  as qtRazaoPedidoMesVsMedia,
          count(distinct case when datediff('{date}',dtPurchase) < 30 then idOrder end) / count(distinct case when datediff('{date}',dtPurchase) >= 30 and datediff('{date}',dtPurchase) < 60 then idOrder end)  as qtRazaoPedidoMesVsMes1,
          
           sum(case when datediff('{date}',dtPurchase) < 30 then vlPrice end) / (sum(vlPrice) / count(distinct date_format(dtPurchase, 'y-M')))  as qtRazaoReceitaMesVsMedia,
-         sum(case when datediff('{date}',dtPurchase) < 30 then vlPrice end) / sum(case when datediff('{date}',dtPurchase) >= 30 and datediff('{date}',dtPurchase) < 60 then vlPrice end)  as qtRazaoRceitaMesVsMes1
+         sum(case when datediff('{date}',dtPurchase) < 30 then vlPrice end) / sum(case when datediff('{date}',dtPurchase) >= 30 and datediff('{date}',dtPurchase) < 60 then vlPrice end)  as qtRazaoReceitaMesVsMes1
 
   from tb_join_all as t1
 
@@ -115,11 +115,11 @@ tb_top_estado as (
 
   from tb_seller_state
   qualify rankEstado = 1
-
 )
 
-select t1.*,
-       t2.avgDiffDataVendas,
+select '{date}' as dtReferencia,
+       t1.*,
+       t2.avgDiffDataVendas as qtMediaDiasEntreVendas,
        t2.vlMaxPedido,
        t3.descStateCustomer as descTopEstado
        
