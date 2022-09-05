@@ -22,7 +22,7 @@ tb_summary as (
 
   from tb_join_all as t1
 
-  group by t1.idSeller
+  group by 1, t1.idSeller
 
 ),
 
