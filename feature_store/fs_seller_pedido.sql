@@ -117,7 +117,8 @@ tb_top_estado as (
   qualify rankEstado = 1
 )
 
-select t1.*,
+select '{date}' as dtReferencia,
+       t1.*,
        t2.avgDiffDataVendas as qtMediaDiasEntreVendas,
        t2.vlMaxPedido,
        t3.descStateCustomer as descTopEstado
