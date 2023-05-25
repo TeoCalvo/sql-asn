@@ -1,38 +1,38 @@
 with tb_join_all as(
 
-  SELECT t1.idOrder,
-         t1.dtPurchase,
-         t1.dtDeliveredCustomer,
-         t2.idSeller,
-         t3.idReview,
-         t3.vlScore,
-         t3.dtCreation,
-         t3.dtAnswer,
-         t3.descMessage
+  SELECT t1.idPedido,
+         t1.dtPedido,
+         t1.dtEntregue,
+         t2.idVendedor,
+         t3.idAvaliacao,
+         t3.vlNota,
+         t3.dtAvaliacao,
+         t3.dtResposta,
+         t3.descMensagemComentario
 
-  FROM silver_olist.orders as t1
+  FROM silver.olist.pedido as t1
 
-  left join silver_olist.order_items as t2
-  on t1.idOrder = t2.idOrder
+  left join silver.olist.item_pedido as t2
+  on t1.idPedido = t2.idPedido
 
-  left join silver_olist.order_review as t3
-  on t1.idOrder = t3.idOrder
+  left join silver.olist.avaliacao_pedido as t3
+  on t1.idPedido = t3.idPedido
 
-  where t1.dtPurchase < '{date}'
-  and t1.dtPurchase >= add_months('{date}', -6)
-  and t2.idSeller is not null
+  where t1.dtPedido < '{date}'
+  and t1.dtPedido >= add_months('{date}', -6)
+  and t2.idVendedor is not null
 
 ),
 
 tb_order_seller_review as (
 
-  select idOrder, idSeller, dtPurchase, dtDeliveredCustomer,
-        count( distinct idReview) as qtReviews,
-         avg(vlScore) as avgScoreReview,
-         min(dtCreation) as minDtReview,
-         max(dtCreation) as maxDtReview,
-         min(dtAnswer) as minDtAnswer,
-         sum(case when descMessage is not null then 1 else 0 end) as qtMensagem
+  select idPedido, idVendedor, dtPedido, dtEntregue,
+        count( distinct idAvaliacao) as qtReviews,
+         avg(vlNota) as avgScoreReview,
+         min(dtAvaliacao) as minDtReview,
+         max(dtAvaliacao) as maxDtReview,
+         min(dtResposta) as minDtAnswer,
+         sum(case when descMensagemComentario is not null then 1 else 0 end) as qtMensagem
 
   from tb_join_all
   group by 1,2,3,4
@@ -41,7 +41,7 @@ tb_order_seller_review as (
 
 tb_summary (
 
-  select idSeller,
+  select idVendedor,
          avg(case when avgScoreReview < 3 then 1 else 0 end) as pctScoreNegativo,
          avg(case when avgScoreReview >=3 and avgScoreReview < 4 then 1 else 0 end) as pctScoreNeutro,
          avg(case when avgScoreReview >=4 then 1 else 0 end) as pctScorePositivo,
@@ -50,34 +50,34 @@ tb_summary (
          sum(qtMensagem) as qtMensagem,
          sum(qtMensagem) / sum(qtReviews) as pctMensagem,
          avg(datediff(minDtAnswer, minDtReview)) as avgTempoResposta,
-         avg(datediff(minDtReview, dtDeliveredCustomer)) as avgTempoReview,
+         avg(datediff(minDtReview, dtEntregue)) as avgTempoReview,
 
-         avg(case when datediff( '{date}',dtPurchase) < 30 and avgScoreReview < 3 then 1 else 0 end) as pctScoreNegativo1M,
-         avg(case when datediff( '{date}',dtPurchase) < 30 and avgScoreReview >=3 and avgScoreReview < 4 then 1 else 0 end) as pctScoreNeutro1M,
-         avg(case when datediff( '{date}',dtPurchase) < 30 and avgScoreReview >=4 then 1 else 0 end) as pctScorePositivo1M,
-         avg(case when datediff( '{date}',dtPurchase) < 30 and minDtAnswer is not null then 1 else 0 end) as pctResposta1M,
-         sum(case when datediff( '{date}',dtPurchase) < 30 then qtReviews else 0 end) as qtReviews1M,
-         sum(case when datediff( '{date}',dtPurchase) < 30 then qtMensagem else 0 end) as qtMensagem1M,
-         avg(case when datediff( '{date}',dtPurchase) < 30 then datediff(minDtAnswer, minDtReview) end) as avgTempoResposta1M,
-         avg(case when datediff( '{date}',dtPurchase) < 30 then datediff(minDtReview, dtDeliveredCustomer) end) as avgTempoReview1M,
+         avg(case when datediff( '{date}',dtPedido) < 30 and avgScoreReview < 3 then 1 else 0 end) as pctScoreNegativo1M,
+         avg(case when datediff( '{date}',dtPedido) < 30 and avgScoreReview >=3 and avgScoreReview < 4 then 1 else 0 end) as pctScoreNeutro1M,
+         avg(case when datediff( '{date}',dtPedido) < 30 and avgScoreReview >=4 then 1 else 0 end) as pctScorePositivo1M,
+         avg(case when datediff( '{date}',dtPedido) < 30 and minDtAnswer is not null then 1 else 0 end) as pctResposta1M,
+         sum(case when datediff( '{date}',dtPedido) < 30 then qtReviews else 0 end) as qtReviews1M,
+         sum(case when datediff( '{date}',dtPedido) < 30 then qtMensagem else 0 end) as qtMensagem1M,
+         avg(case when datediff( '{date}',dtPedido) < 30 then datediff(minDtAnswer, minDtReview) end) as avgTempoResposta1M,
+         avg(case when datediff( '{date}',dtPedido) < 30 then datediff(minDtReview, dtEntregue) end) as avgTempoReview1M,
 
-          avg(case when datediff( '{date}',dtPurchase) < 90 and avgScoreReview < 3 then 1 else 0 end) as pctScoreNegativo3M,
-         avg(case when datediff( '{date}',dtPurchase) < 90 and avgScoreReview >=3 and avgScoreReview < 4 then 1 else 0 end) as pctScoreNeutro3M,
-         avg(case when datediff( '{date}',dtPurchase) < 90 and avgScoreReview >=4 then 1 else 0 end) as pctScorePositivo3M,
-         avg(case when datediff( '{date}',dtPurchase) < 90 and minDtAnswer is not null then 1 else 0 end) as pctResposta3M,
-         sum(case when datediff( '{date}',dtPurchase) < 90 then qtReviews else 0 end) as qtReviews3M,
-         sum(case when datediff( '{date}',dtPurchase) < 90 then qtMensagem else 0 end) as qtMensagem3M,
-         avg(case when datediff( '{date}',dtPurchase) < 90 then datediff(minDtAnswer, minDtReview) end) as avgTempoResposta3M,
-         avg(case when datediff( '{date}',dtPurchase) < 90 then datediff(minDtReview, dtDeliveredCustomer) end) as avgTempoReview3M
+          avg(case when datediff( '{date}',dtPedido) < 90 and avgScoreReview < 3 then 1 else 0 end) as pctScoreNegativo3M,
+         avg(case when datediff( '{date}',dtPedido) < 90 and avgScoreReview >=3 and avgScoreReview < 4 then 1 else 0 end) as pctScoreNeutro3M,
+         avg(case when datediff( '{date}',dtPedido) < 90 and avgScoreReview >=4 then 1 else 0 end) as pctScorePositivo3M,
+         avg(case when datediff( '{date}',dtPedido) < 90 and minDtAnswer is not null then 1 else 0 end) as pctResposta3M,
+         sum(case when datediff( '{date}',dtPedido) < 90 then qtReviews else 0 end) as qtReviews3M,
+         sum(case when datediff( '{date}',dtPedido) < 90 then qtMensagem else 0 end) as qtMensagem3M,
+         avg(case when datediff( '{date}',dtPedido) < 90 then datediff(minDtAnswer, minDtReview) end) as avgTempoResposta3M,
+         avg(case when datediff( '{date}',dtPedido) < 90 then datediff(minDtReview, dtEntregue) end) as avgTempoReview3M
 
   from tb_order_seller_review
 
-  group by idSeller
+  group by idVendedor
 
 )
 
 select  '{date}' as dtReferencia,
-        idSeller,
+        idVendedor,
         pctScoreNegativo,
         pctScoreNeutro,
         pctScorePositivo,

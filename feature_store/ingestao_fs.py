@@ -15,6 +15,12 @@ import delta
 
 from tqdm import tqdm
 
+def table_exists(database, table):
+    count = (spark.sql(f"SHOW TABLES FROM {database}")
+                  .filter(f"tableName = '{table}'")
+                  .count())
+    return count == 1
+
 def read_query(path):
     with open(path, "r") as open_file:
         query = open_file.read()
@@ -32,28 +38,46 @@ def date_range(date_start, date_stop, step=1):
 
     return dates[::step]
 
-def execute_ingestion( table='fs_seller_atividade', data='2018-01-01', ids=['dtReferencia', 'idSeller'] ):
 
-    # Le a query e define a data de execução
-    query = read_query(f"{table}.sql")
-    query_format = query.format(date=data)
+def save_first_load(df, table_full_name):
+    (df.write
+        .format('delta')
+        .mode('overwrite')
+        .option('overwriteSchema', 'true')
+        .partitionBy('dtReferencia')
+        .saveAsTable(table_full_name)
+        )
 
-    # Executa a query no spark
-    df = spark.sql(query_format)
 
+def save_upsert(df, delta_table, ids):
     # faz o merge do resultado com a tabela existente
     condicao = " and ".join([f"delta_table.{i} = new_data.{i}" for i in ids])
-    delta_table = delta.DeltaTable.forName(spark, f"silver_olist.{table}")
     (delta_table.alias("delta_table")
                 .merge(df.alias("new_data"), condicao)
                 .whenMatchedUpdateAll()
                 .whenNotMatchedInsertAll()
                 .execute())
+
+
+def execute_ingestion(database, table, ids, dates):
+    query = read_query(f"{table}.sql")
+
+    if not table_exists(database, table):
+        print("Executando a primeira carga...")
+        df = spark.sql(query.format(date=dates.pop(0)))
+        save_first_load(df, f'{database}.{table}')
+
+    print("Executando cargas incrementais...")
+    delta_table = delta.DeltaTable.forName(spark, f'{database}.{table}')
+    for d in dates:
+        df = spark.sql(query.format(date=d))
+        save_upsert(df, delta_table, ids)
+
+
     
 
 # COMMAND ----------
 
 dates = [i for i in date_range("2017-06-01", "2018-02-01") if i.endswith("01")]
 
-for d in tqdm(dates):
-    execute_ingestion(table='fs_seller_produto', data=d, ids=['dtReferencia', 'idSeller'])
+execute_ingestion('analytics.asn', 'fs_seller_atividade', ['dtReferencia', 'idVendedor'], dates)
