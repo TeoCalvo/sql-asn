@@ -78,6 +78,11 @@ def execute_ingestion(database, table, ids, dates):
 
 # COMMAND ----------
 
-dates = [i for i in date_range("2017-06-01", "2018-02-01") if i.endswith("01")]
+table_name = dbutils.widgets.get('table_name')
+ids = dbutils.widgets.get('ids').split(",")
+date_start = dbutils.widgets.get('date_start')
+date_stop = dbutils.widgets.get('date_stop')
 
-execute_ingestion('analytics.asn', 'fs_seller_atividade', ['dtReferencia', 'idVendedor'], dates)
+dates = [i for i in date_range(date_start, date_stop) if i.endswith("01")]
+
+execute_ingestion('analytics.asn', table_name, ids, dates)
