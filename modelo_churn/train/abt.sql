@@ -1,6 +1,6 @@
 -- Databricks notebook source
-drop table if exists silver_olist.abt_churn;
-create table silver_olist.abt_churn
+drop table if exists analytics.asn.abt_olist_churn;
+create table analytics.asn.abt_olist_churn
 
 with tb_features as (
 
@@ -104,49 +104,49 @@ with tb_features as (
           t5.qtTiposCategorias1M,
           t5.qtTiposCategorias3M
 
-  from silver_olist.fs_seller_atividade as t1
+  from analytics.asn.fs_seller_atividade as t1
 
-  left join silver_olist.fs_seller_avaliacao as t2
-  on t1.dtReferencia = t2.dtReferencia and t1.idSeller = t2.idSeller
+  left join analytics.asn.fs_seller_avaliacao as t2
+  on t1.dtReferencia = t2.dtReferencia and t1.idVendedor = t2.idVendedor
 
-  left join silver_olist.fs_seller_pagamento as t3
-  on t1.dtReferencia = t3.dtReferencia and t1.idSeller = t3.idSeller
+  left join analytics.asn.fs_seller_pagamento as t3
+  on t1.dtReferencia = t3.dtReferencia and t1.idVendedor = t3.idVendedor
 
-  left join silver_olist.fs_seller_pedido as t4
-  on t1.dtReferencia = t4.dtReferencia and t1.idSeller = t4.idSeller
+  left join analytics.asn.fs_seller_pedido as t4
+  on t1.dtReferencia = t4.dtReferencia and t1.idVendedor = t4.idVendedor
 
-  left join silver_olist.fs_seller_produto as t5
-  on t1.dtReferencia = t5.dtReferencia and t1.idSeller = t5.idSeller
+  left join analytics.asn.fs_seller_produto as t5
+  on t1.dtReferencia = t5.dtReferencia and t1.idVendedor = t5.idVendedor
   
-  where t1.idSeller is not null
+  where t1.idVendedor is not null
   and t1.dtReferencia <= '2018-02-01'
 ),
 
 tb_date_sell as (
 
   select  distinct
-          date(dtPurchase) as dtTarget,
-          idSeller
+          date(dtPedido) as dtTarget,
+          idVendedor
 
-  from silver_olist.orders as t1
+  from silver.olist.pedido as t1
 
-  left join silver_olist.order_items as t2
-  on t1.idOrder = t2.idOrder
+  left join silver.olist.item_pedido as t2
+  on t1.idPedido = t2.idPedido
 
 )
 
 select 
        distinct
        t1.*,
-       case when t2.idSeller is null then 1 else 0 end as flChurn
+       case when t2.idVendedor is null then 1 else 0 end as flChurn
 
 from tb_features as t1
 
 left join tb_date_sell as t2
-on t1.idSeller = t2.idSeller
+on t1.idVendedor = t2.idVendedor
 and datediff(t2.dtTarget, t1.dtReferencia) <= 30 and datediff(t2.dtTarget, t1.dtReferencia) >= 0
 order by t1.dtReferencia;
 
 -- COMMAND ----------
 
-select * from silver_olist.abt_churn
+select count(*) from analytics.asn.abt_olist_churn
