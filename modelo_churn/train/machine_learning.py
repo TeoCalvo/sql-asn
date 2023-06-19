@@ -3,6 +3,11 @@
 
 # COMMAND ----------
 
+# MAGIC %sql
+# MAGIC SELECT * FROM analytics.asn.abt_olist_churn
+
+# COMMAND ----------
+
 # DBTITLE 1,PySpark para Pandas
 df = spark.table("analytics.asn.abt_olist_churn")
 df = df.toPandas()
@@ -109,7 +114,7 @@ X_transform = onehot_encoder.transform(X_transform)
 
 # COMMAND ----------
 
-# DBTITLE 1,Modify (Pipeline)
+# DBTITLE 1,Modify (Pipeline) - Decision Tree
 # Maneira raiz
 from feature_engine import encoding
 from feature_engine import imputation
@@ -117,6 +122,8 @@ from feature_engine import imputation
 from sklearn import linear_model
 from sklearn import tree
 from sklearn import pipeline
+from sklearn import model_selection
+
 
 # Método de imputação de dados
 cat_imputer = imputation.CategoricalImputer(variables=cat_features, fill_value='Faltante')
@@ -139,42 +146,196 @@ imputer_0 = imputation.ArbitraryNumberImputer(arbitrary_number=0, variables=impu
 
 # Nosso algoritmo!!!!
 # model = linear_model.LogisticRegression(penalty='l2',solver='liblinear', max_iter=10000)
-model = tree.DecisionTreeClassifier(min_samples_leaf=50, max_depth=10)
+model = tree.DecisionTreeClassifier()
 
-pipeline_transform = pipeline.Pipeline( [('Imputer de Categoria', cat_imputer),
-                                         ('Média de Categoria', mean_encoder),
-                                         ('Média para Categorias Transformadas', mean_encode_imputer),
-                                         ('OneHot de Categoria', onehot_encoder),
-                                         ('Imputacao 999', imputer_999),
-                                         ('Imputacao 0', imputer_0),
-                                         ('Modelo', model),
+model_pipeline = pipeline.Pipeline( [('Imputer de Categoria', cat_imputer),
+                                     ('Média de Categoria', mean_encoder),
+                                     ('Média para Categorias Transformadas', mean_encode_imputer),
+                                     ('OneHot de Categoria', onehot_encoder),
+                                     ('Imputacao 999', imputer_999),
+                                     ('Imputacao 0', imputer_0),
+                                     ('Modelo', model),
                                          ])
 
-pipeline_transform.fit(X_train, y_train)
+
+model_params = {"Modelo__max_depth": [9,10,11],
+                "Modelo__criterion":['gini'],
+                "Modelo__min_samples_leaf": [90,100,110]}
+
+grid_cv = model_selection.GridSearchCV(model_pipeline,
+                                       param_grid=model_params,
+                                       cv=3,
+                                       verbose=2,
+                                       scoring='roc_auc',
+                                       n_jobs=-1)
+
+grid_cv.fit(X_train, y_train)
+
+# COMMAND ----------
+
+# DBTITLE 1,Modify Pipeline - Random Forest
+# Maneira raiz
+from feature_engine import encoding
+from feature_engine import imputation
+
+from sklearn import linear_model
+from sklearn import ensemble
+from sklearn import pipeline
+from sklearn import model_selection
+
+# Método de imputação de dados
+cat_imputer = imputation.CategoricalImputer(variables=cat_features, fill_value='Faltante')
+
+# Método de encoding
+mean_encoder = encoding.MeanEncoder(variables=['descCidade','descTopCategoria','descTopEstado'])
+
+# Método de imputação para cidades não obervadas em treino
+mean_encode_imputer = imputation.MeanMedianImputer(variables=['descCidade','descTopCategoria','descTopEstado'],
+                                                   imputation_method='mean')
+
+# Método de OneHot
+onehot_encoder = encoding.OneHotEncoder(variables=['descEstado'], drop_last=True)
+
+# Método de imputação para variáveis numérias (999)
+imputer_999 = imputation.ArbitraryNumberImputer(arbitrary_number=999, variables=imput_999)
+
+# Método de imputação para variáveis numérias (0)
+imputer_0 = imputation.ArbitraryNumberImputer(arbitrary_number=0, variables=imput_0)
+
+# Nosso algoritmo!!!!
+# model = linear_model.LogisticRegression(penalty='l2',solver='liblinear', max_iter=10000)
+model = ensemble.RandomForestClassifier()
+
+model_pipeline = pipeline.Pipeline( [('Imputer de Categoria', cat_imputer),
+                                     ('Média de Categoria', mean_encoder),
+                                     ('Média para Categorias Transformadas', mean_encode_imputer),
+                                     ('OneHot de Categoria', onehot_encoder),
+                                     ('Imputacao 999', imputer_999),
+                                     ('Imputacao 0', imputer_0),
+                                     ('Modelo', model),
+                                         ])
+
+
+model_params = {"Modelo__max_depth": [9,10,11],
+                "Modelo__criterion":['gini'],
+                "Modelo__min_samples_leaf": [90,100,110],
+                "Modelo__n_estimators": [90,100,200,500]}
+
+random_cv = model_selection.RandomizedSearchCV(model_pipeline,
+                                             param_distributions=model_params,
+                                             cv=3,
+                                             verbose=3,
+                                             scoring='roc_auc',
+                                             n_jobs=-1,
+                                             n_iter=25)
+
+random_cv.fit(X_train, y_train)
+
+# COMMAND ----------
+
+# DBTITLE 1,Grid dentro do Pipeline
+# Maneira raiz
+from feature_engine import encoding
+from feature_engine import imputation
+
+from sklearn import linear_model
+from sklearn import ensemble
+from sklearn import pipeline
+from sklearn import model_selection
+
+# Método de imputação de dados
+cat_imputer = imputation.CategoricalImputer(variables=cat_features, fill_value='Faltante')
+
+# Método de encoding
+mean_encoder = encoding.MeanEncoder(variables=['descCidade','descTopCategoria','descTopEstado'])
+
+# Método de imputação para cidades não obervadas em treino
+mean_encode_imputer = imputation.MeanMedianImputer(variables=['descCidade','descTopCategoria','descTopEstado'],
+                                                   imputation_method='mean')
+
+# Método de OneHot
+onehot_encoder = encoding.OneHotEncoder(variables=['descEstado'], drop_last=True)
+
+# Método de imputação para variáveis numérias (999)
+imputer_999 = imputation.ArbitraryNumberImputer(arbitrary_number=999, variables=imput_999)
+
+# Método de imputação para variáveis numérias (0)
+imputer_0 = imputation.ArbitraryNumberImputer(arbitrary_number=0, variables=imput_0)
+
+# Nosso algoritmo!!!!
+# model = linear_model.LogisticRegression(penalty='l2',solver='liblinear', max_iter=10000)
+model = ensemble.RandomForestClassifier()
+model_params = {"max_depth": [9,10,11],
+                "criterion":['gini'],
+                "min_samples_leaf": [90,100,110],
+                "n_estimators": [90,100,200,500]}
+
+random_cv = model_selection.RandomizedSearchCV(model,
+                                                param_distributions=model_params,
+                                                cv=3,
+                                                verbose=3,
+                                                scoring='roc_auc',
+                                                n_jobs=-1,
+                                                n_iter=25)
+
+model_pipeline = pipeline.Pipeline( [('Imputer de Categoria', cat_imputer),
+                                     ('Média de Categoria', mean_encoder),
+                                     ('Média para Categorias Transformadas', mean_encode_imputer),
+                                     ('OneHot de Categoria', onehot_encoder),
+                                     ('Imputacao 999', imputer_999),
+                                     ('Imputacao 0', imputer_0),
+                                     ('Modelo', random_cv),])
+
+model_pipeline.fit(X_train, y_train)
+
+# COMMAND ----------
+
+import pandas as pd
+
+pd.DataFrame(random_cv.cv_results_)
 
 # COMMAND ----------
 
 from sklearn import metrics
 
-y_train_pred = pipeline_transform.predict(X_train)
-
+y_train_pred = model_pipeline.predict(X_train)
 acc_train = metrics.accuracy_score(y_train, y_train_pred)
 
-y_train_proba = pipeline_transform.predict_proba(X_train)
+y_train_proba = model_pipeline.predict_proba(X_train)
 roc_train = metrics.roc_auc_score(y_train, y_train_proba[:,1])
 
-y_test_pred = pipeline_transform.predict(X_test)
-
+y_test_pred = model_pipeline.predict(X_test)
 acc_test = metrics.accuracy_score(y_test, y_test_pred)
 
-y_test_proba = pipeline_transform.predict_proba(X_test)
+y_test_proba = model_pipeline.predict_proba(X_test)
 roc_test = metrics.roc_auc_score(y_test, y_test_proba[:,1])
+
+y_oot_pred = model_pipeline.predict(df_oot[features])
+acc_oot = metrics.accuracy_score(df_oot[target], y_oot_pred)
+
+y_oot_proba = model_pipeline.predict_proba(df_oot[features])
+roc_oot = metrics.roc_auc_score(df_oot[target], y_oot_proba[:,1])
+
 
 print("Acc train:", acc_train)
 print("AUC train:", roc_train)
 
 print("Acc test:", acc_test)
 print("AUC test:", roc_test)
+
+print("Acc oot:", acc_oot)
+print("AUC oot:", roc_oot)
+
+# Acc train: 0.7915146460961118
+# AUC train: 0.8855392927813936
+# Acc test: 0.7469779074614422
+# AUC test: 0.8231651537047692
+
+# COMMAND ----------
+
+print("Linhas treino:", X_train.shape[0], "| Target:", y_train.mean())
+print("Linhas test:", X_test.shape[0], "  | Target:", y_test.mean())
+print("Linhas oot:", df_oot.shape[0], "   | Target:", df_oot[target].mean())
 
 # COMMAND ----------
 
@@ -192,7 +353,7 @@ skplt.metrics.plot_cumulative_gain(y_train, y_train_proba)
 
 # COMMAND ----------
 
-skplt.metrics.plot_lift_curve(y_train, y_train_proba)
+skplt.metrics.plot_lift_curve(y_test, y_train_proba)
 
 # COMMAND ----------
 
